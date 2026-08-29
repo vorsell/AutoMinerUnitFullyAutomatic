@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+  <name>Auto Miner Unit - Fully Automatic</name>
+  <author>Vorsel</author>
+  <packageId>vorsel.autominerunit.fullyautomatic</packageId>
+  <description>Extends [Auto Miner Unit] - Auto Miner Unit with a new automatic mining unit launcher that can identify compatible scanned targets, construct the required mining pod, wait for sufficient fuel, and launch without manual target selection.
+
+The launcher supports prototype and standard land mining pods as well as asteroid mining pods. It includes configurable land and asteroid automation, asteroid prioritization, vacstone recovery, first-discovered/nearest/farthest target strategies, per-launcher target fuel limits, status reporting, roof safety checks, and defaults for newly built launchers.
+
+Duplicate mining pods that reach an already occupied target reduce the remaining mining time instead of being lost. An optional notification setting suppresses the launch message while retaining the arrival message.
+
+When Rimefeller is active, fuel pipe support is added to this mod's automatic launcher and to the required original mod's mining unit launcher.
+
+Requires Harmony and [Auto Miner Unit] - Auto Miner Unit. Code for this extension was written with assistance from OpenAI Codex.</description>
+  <supportedVersions>
+    <li>1.6</li>
+  </supportedVersions>
+  <modDependencies>
+    <li>
+      <packageId>brrainz.harmony</packageId>
+      <displayName>Harmony</displayName>
+      <steamWorkshopUrl>steam://url/CommunityFilePage/2009463077</steamWorkshopUrl>
+    </li>
+    <li>
+      <packageId>hhinattta.miner</packageId>
+      <displayName>[Auto Miner Unit] - Auto Miner Unit</displayName>
+      <steamWorkshopUrl>steam://url/CommunityFilePage/3695217619</steamWorkshopUrl>
+    </li>
+  </modDependencies>
+  <loadAfter>
+    <li>brrainz.harmony</li>
+    <li>hhinattta.miner</li>
+    <li>Dubwise.Rimefeller</li>
+  </loadAfter>
+</ModMetaData>

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <ThingDef ParentName="BuildingBase">
+    <defName>AMUFA_FullyAutomaticMinerLauncher</defName>
+    <label>automatic mining unit launcher</label>
+    <description>A fully automated fueling and launch platform for mining unit deployment pods. It can construct the configured pod type, select a reachable mineral target, and launch the pod automatically.</description>
+    <thingClass>AutoMinerUnitFullyAutomatic.Building_FullyAutomaticMinerLauncher</thingClass>
+    <graphicData>
+      <texPath>Things/AutoMiner_Launch</texPath>
+      <graphicClass>Graphic_Multi</graphicClass>
+      <drawSize>(2,3)</drawSize>
+    </graphicData>
+    <altitudeLayer>Building</altitudeLayer>
+    <passability>Impassable</passability>
+    <fillPercent>1</fillPercent>
+    <castEdgeShadows>true</castEdgeShadows>
+    <canOverlapZones>false</canOverlapZones>
+    <terrainAffordanceNeeded>Medium</terrainAffordanceNeeded>
+    <leaveResourcesWhenKilled>true</leaveResourcesWhenKilled>
+    <selectable>true</selectable>
+    <rotatable>true</rotatable>
+    <size>(1,2)</size>
+    <tickerType>Normal</tickerType>
+    <drawerType>MapMeshAndRealTime</drawerType>
+    <repairEffect>Repair</repairEffect>
+    <soundImpactDefault>BulletImpact_Metal</soundImpactDefault>
+    <filthLeaving>Filth_RubbleBuilding</filthLeaving>
+    <costList>
+      <Steel>250</Steel>
+      <ComponentIndustrial>6</ComponentIndustrial>
+      <ComponentSpacer>1</ComponentSpacer>
+    </costList>
+    <statBases>
+      <MaxHitPoints>300</MaxHitPoints>
+      <WorkToBuild>100</WorkToBuild>
+      <Flammability>0.5</Flammability>
+    </statBases>
+    <constructionSkillPrerequisite>8</constructionSkillPrerequisite>
+    <building>
+      <hasFuelingPort>true</hasFuelingPort>
+    </building>
+    <comps>
+      <li Class="RimWorld.CompProperties_Refuelable">
+        <fuelCapacity>400</fuelCapacity>
+        <targetFuelLevelConfigurable>true</targetFuelLevelConfigurable>
+        <initialConfigurableTargetFuelLevel>300</initialConfigurableTargetFuelLevel>
+        <fuelFilter>
+          <thingDefs>
+            <li>Chemfuel</li>
+          </thingDefs>
+        </fuelFilter>
+        <fuelLabel>Chemfuel</fuelLabel>
+        <fuelGizmoLabel>Chemfuel</fuelGizmoLabel>
+        <consumeFuelOnlyWhenUsed>true</consumeFuelOnlyWhenUsed>
+        <autoRefuelPercent>1</autoRefuelPercent>
+        <showFuelGizmo>true</showFuelGizmo>
+        <drawFuelGaugeInMap>true</drawFuelGaugeInMap>
+        <drawOutOfFuelOverlay>false</drawOutOfFuelOverlay>
+        <showAllowAutoRefuelToggle>true</showAllowAutoRefuelToggle>
+        <canEjectFuel>true</canEjectFuel>
+      </li>
+    </comps>
+    <placeWorkers>
+      <li>PlaceWorker_NotUnderRoof</li>
+    </placeWorkers>
+    <drawPlaceWorkersWhileSelected>true</drawPlaceWorkersWhileSelected>
+    <researchPrerequisites>
+      <li>AdvancedFabrication</li>
+      <li>TransportPod</li>
+    </researchPrerequisites>
+    <designationCategory>Misc</designationCategory>
+    <uiIconScale>0.9</uiIconScale>
+    <uiOrder>2151</uiOrder>
+  </ThingDef>
+</Defs>

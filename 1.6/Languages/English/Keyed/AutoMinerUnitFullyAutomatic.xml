@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <AMUFA_AutomationOff>Automation: Off</AMUFA_AutomationOff>
+  <AMUFA_AutomationOn>Automation: On</AMUFA_AutomationOn>
+  <AMUFA_AutomationOffDesc>Automatic construction and launching are paused. Click to enable.</AMUFA_AutomationOffDesc>
+  <AMUFA_AutomationOnDesc>Automatically construct and launch configured mining pods. Click to pause.</AMUFA_AutomationOnDesc>
+  <AMUFA_AutoRebuildManaged>Automatic mode has taken control of auto rebuild.</AMUFA_AutoRebuildManaged>
+  <AMUFA_LandOff>Land pods: Off</AMUFA_LandOff>
+  <AMUFA_LandProto>Land pods: Prototype</AMUFA_LandProto>
+  <AMUFA_LandStandard>Land pods: Standard</AMUFA_LandStandard>
+  <AMUFA_LandOffDesc>Do not construct land mining pods. Click for prototype pods.</AMUFA_LandOffDesc>
+  <AMUFA_LandProtoDesc>Construct prototype pods for land mineral sites. Click for standard pods.</AMUFA_LandProtoDesc>
+  <AMUFA_LandStandardDesc>Construct standard pods for land mineral sites. Click to disable.</AMUFA_LandStandardDesc>
+  <AMUFA_AsteroidOff>Asteroid pods: Off</AMUFA_AsteroidOff>
+  <AMUFA_AsteroidOn>Asteroid pods: On</AMUFA_AsteroidOn>
+  <AMUFA_AsteroidOffDesc>Do not construct asteroid mining pods. Click to enable.</AMUFA_AsteroidOffDesc>
+  <AMUFA_AsteroidOnDesc>Prioritize reachable asteroids and construct asteroid mining pods. Click to disable.</AMUFA_AsteroidOnDesc>
+  <AMUFA_StrategyOldest>Targets: First discovered</AMUFA_StrategyOldest>
+  <AMUFA_StrategyNearest>Targets: Nearest</AMUFA_StrategyNearest>
+  <AMUFA_StrategyFarthest>Targets: Farthest</AMUFA_StrategyFarthest>
+  <AMUFA_StrategyOldestDesc>Use the earliest discovered compatible target first. Click for nearest-first.</AMUFA_StrategyOldestDesc>
+  <AMUFA_StrategyNearestDesc>Use the reachable target with the lowest fuel distance first. Click for farthest-first.</AMUFA_StrategyNearestDesc>
+  <AMUFA_StrategyFarthestDesc>Use the farthest reachable target first. Click for first-discovered.</AMUFA_StrategyFarthestDesc>
+  <AMUFA_VacstoneOff>Vacstone: Off</AMUFA_VacstoneOff>
+  <AMUFA_VacstoneOn>Vacstone: On</AMUFA_VacstoneOn>
+  <AMUFA_VacstoneOffDesc>Asteroid pods will not recover vacstone. Click to enable.</AMUFA_VacstoneOffDesc>
+  <AMUFA_VacstoneOnDesc>Asteroid pods will recover vacstone. Click to disable.</AMUFA_VacstoneOnDesc>
+  <AMUFA_AsteroidPodStranded>The mining unit has no reachable target at the automatic mining unit launcher's current target fuel level and will wait at the launch position.</AMUFA_AsteroidPodStranded>
+  <AMUFA_LandOnlyMismatch>{0} is configured only for land mining pods, but currently only asteroid mining targets are available.</AMUFA_LandOnlyMismatch>
+  <AMUFA_DuplicateAccelerated>An additional mining pod reached an occupied target. The remaining mining time has been halved.</AMUFA_DuplicateAccelerated>
+  <AMUFA_ArrivalOnlyMessages>Mining unit notifications: arrival only</AMUFA_ArrivalOnlyMessages>
+  <AMUFA_ArrivalOnlyMessagesDesc>Hide the notification shown immediately after launch and keep the single arrival notification. Fuel, invalid-target, target-lost, and mining-complete messages are unaffected.</AMUFA_ArrivalOnlyMessagesDesc>
+  <AMUFA_CurrentStatus>Current status: </AMUFA_CurrentStatus>
+  <AMUFA_StatusAutomationOff>automation is disabled</AMUFA_StatusAutomationOff>
+  <AMUFA_StatusNoReachableTarget>no reachable target is within launcher range at the current target fuel level</AMUFA_StatusNoReachableTarget>
+  <AMUFA_StatusPreparingLand>preparing to launch to a land target</AMUFA_StatusPreparingLand>
+  <AMUFA_StatusPreparingAsteroid>preparing to launch to an asteroid</AMUFA_StatusPreparingAsteroid>
+  <AMUFA_StatusFuelInsufficient>insufficient chemfuel; waiting for refueling</AMUFA_StatusFuelInsufficient>
+  <AMUFA_StatusRoofed>launch port is roofed</AMUFA_StatusRoofed>
+  <AMUFA_StatusLaunchPortOccupied>launch port is occupied, preventing blueprint placement</AMUFA_StatusLaunchPortOccupied>
+  <AMUFA_LaunchPortOccupied>The launch port of {0} is occupied, preventing automatic mining pod blueprint placement.</AMUFA_LaunchPortOccupied>
+  <AMUFA_RoofBlocked>The launch port of {0} is roofed. Automatic construction or launch has been paused.</AMUFA_RoofBlocked>  <AMUFA_DefaultSettingsHeader>Defaults for newly built automatic launchers</AMUFA_DefaultSettingsHeader>
+  <AMUFA_DefaultFuelLimit>Default fuel limit: {0}</AMUFA_DefaultFuelLimit>
+  <AMUFA_DefaultFuelLimitDesc>Sets the configurable target fuel level copied to each newly built automatic launcher. Whole numbers from 0 to 400 only. Existing launchers are not changed.</AMUFA_DefaultFuelLimitDesc>
+  <AMUFA_DefaultAutomation>Enable automation by default</AMUFA_DefaultAutomation>
+  <AMUFA_DefaultAutomationDesc>Sets whether each newly built automatic launcher starts with automatic operation enabled. Existing launchers are not changed.</AMUFA_DefaultAutomationDesc>
+  <AMUFA_DefaultTargetStrategy>Default target strategy</AMUFA_DefaultTargetStrategy>
+  <AMUFA_DefaultTargetStrategyDesc>Sets the target strategy copied to each newly built automatic launcher. Existing launchers are not changed.</AMUFA_DefaultTargetStrategyDesc>
+  <AMUFA_ResetSettings>Reset all mod settings</AMUFA_ResetSettings>
+  <AMUFA_ResetSettingsDesc>Reset the notification option and all defaults for newly built automatic launchers. Existing launcher instances are not changed.</AMUFA_ResetSettingsDesc>
+</LanguageData>
+
+

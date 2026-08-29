@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+  <Operation Class="PatchOperationFindMod">
+    <mods>
+      <li>Rimefeller</li>
+    </mods>
+    <match Class="PatchOperationConditional">
+      <xpath>/Defs/ThingDef[defName="AutoMiner_Launcher"]/comps/li[@Class="Rimefeller.CompProperties_Pipe"]</xpath>
+      <nomatch Class="PatchOperationAdd">
+        <xpath>/Defs/ThingDef[defName="AutoMiner_Launcher"]/comps</xpath>
+        <value>
+          <li Class="Rimefeller.CompProperties_Pipe" />
+        </value>
+      </nomatch>
+    </match>
+  </Operation>
+</Patch>

@@ -39,6 +39,8 @@ namespace AutoMinerUnitFullyAutomatic
             ContentFinder<Texture2D>.Get("UI/TargetStrategy_Nearest");
         private static readonly Texture2D StrategyFarthestIcon =
             ContentFinder<Texture2D>.Get("UI/TargetStrategy_Farthest");
+        private static readonly Texture2D VacstoneEnabledIcon =
+            ContentFinder<Texture2D>.Get("Things/Building/Production/DeepDrill");
 
         private static readonly string[] OriginalAutoRebuildLabelKeys =
         {
@@ -253,22 +255,31 @@ namespace AutoMinerUnitFullyAutomatic
         }
         public override IEnumerable<Gizmo> GetGizmos()
         {
+            bool automationCommandYielded = false;
+
             foreach (Gizmo gizmo in base.GetGizmos())
             {
                 Command_Action command = gizmo as Command_Action;
-                if (command != null && IsOriginalAutoRebuildCommand(command))
+                bool originalAutoRebuild = command != null && IsOriginalAutoRebuildCommand(command);
+                bool originalManualBuild = command != null && IsOriginalManualBuildCommand(command);
+                if (!automationCommandYielded && (originalAutoRebuild || originalManualBuild))
+                {
+                    automationCommandYielded = true;
+                    yield return AutomationCommand();
+                }
+
+                if (originalAutoRebuild)
                 {
                     if (automationEnabled)
                     {
-                        ApplySuspendedAutoRebuildPresentation(command);
-                        command.Disable("AMUFA_AutoRebuildManaged".Translate());
+                        continue;
                     }
 
                     yield return command;
                     continue;
                 }
 
-                if (automationEnabled && command != null && IsOriginalManualBuildCommand(command))
+                if (automationEnabled && originalManualBuild)
                 {
                     continue;
                 }
@@ -276,7 +287,11 @@ namespace AutoMinerUnitFullyAutomatic
                 yield return gizmo;
             }
 
-            yield return AutomationCommand();
+            if (!automationCommandYielded)
+            {
+                yield return AutomationCommand();
+            }
+
             if (!automationEnabled)
             {
                 yield break;
@@ -1071,7 +1086,7 @@ namespace AutoMinerUnitFullyAutomatic
             {
                 defaultLabel = (bringVacstone ? "AMUFA_VacstoneOn" : "AMUFA_VacstoneOff").Translate(),
                 defaultDesc = (bringVacstone ? "AMUFA_VacstoneOnDesc" : "AMUFA_VacstoneOffDesc").Translate(),
-                icon = CommandIcon(AsteroidPodDefName),
+                icon = bringVacstone ? VacstoneEnabledIcon : DisabledIcon(),
                 action = delegate { bringVacstone = !bringVacstone; }
             };
         }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
   <AMUFA_FullyAutomaticMinerLauncher.label>自动矿机发射器</AMUFA_FullyAutomaticMinerLauncher.label>
-  <AMUFA_FullyAutomaticMinerLauncher.description>一座完全自动化的矿机运输仓加油与发射平台。它会根据配置建造相应类型的矿机运输仓，选择燃料范围内可达的矿点，并自动发射。</AMUFA_FullyAutomaticMinerLauncher.description>
+  <AMUFA_FullyAutomaticMinerLauncher.description>一座完全自动化的矿机运输仓加油与发射平台。它会根据配置建造相应类型的矿机运输仓，选择燃料范围内可达的矿点，并自动发射。内置一枚基于超凡科技原理设计的自供能自动化控制核心，能够维持目标分析、建造调度与发射控制所需的少量电力，但无法向外部电网供能。</AMUFA_FullyAutomaticMinerLauncher.description>
   <AMUFA_FullyAutomaticMinerLauncher.comps.CompRefuelable.fuelLabel>化合燃料</AMUFA_FullyAutomaticMinerLauncher.comps.CompRefuelable.fuelLabel>
   <AMUFA_FullyAutomaticMinerLauncher.comps.CompRefuelable.fuelGizmoLabel>化合燃料</AMUFA_FullyAutomaticMinerLauncher.comps.CompRefuelable.fuelGizmoLabel>
 </LanguageData>

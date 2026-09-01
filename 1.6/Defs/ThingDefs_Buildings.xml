@@ -3,7 +3,7 @@
   <ThingDef ParentName="BuildingBase">
     <defName>AMUFA_FullyAutomaticMinerLauncher</defName>
     <label>automatic mining unit launcher</label>
-    <description>A fully automated fueling and launch platform for mining unit deployment pods. It can construct the configured pod type, select a reachable mineral target, and launch the pod automatically.</description>
+    <description>A fully automated fueling and launch platform for mining unit deployment pods. It can construct the configured pod type, select a reachable mineral target, and launch the pod automatically. It contains a self-powered automation control core designed around principles derived from archotech technology. The core supplies the small amount of energy required for target analysis, construction scheduling, and launch control, but cannot provide power to an external grid.</description>
     <thingClass>AutoMinerUnitFullyAutomatic.Building_FullyAutomaticMinerLauncher</thingClass>
     <graphicData>
       <texPath>Things/AutoMiner_Launch</texPath>

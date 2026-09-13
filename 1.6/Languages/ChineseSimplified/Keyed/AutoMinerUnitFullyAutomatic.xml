@@ -4,7 +4,6 @@
   <AMUFA_AutomationOn>自动运行：开启</AMUFA_AutomationOn>
   <AMUFA_AutomationOffDesc>自动建造和发射已暂停。点击开启。</AMUFA_AutomationOffDesc>
   <AMUFA_AutomationOnDesc>自动建造并发射已配置的矿机运输仓。点击暂停。</AMUFA_AutomationOnDesc>
-  <AMUFA_AutoRebuildManaged>自动模式已经接管自动重建</AMUFA_AutoRebuildManaged>
   <AMUFA_LandOff>陆地矿机：关闭</AMUFA_LandOff>
   <AMUFA_LandProto>陆地矿机：试作型</AMUFA_LandProto>
   <AMUFA_LandStandard>陆地矿机：标准型</AMUFA_LandStandard>
@@ -25,14 +24,13 @@
   <AMUFA_VacstoneOn>回收真空岩：开启</AMUFA_VacstoneOn>
   <AMUFA_VacstoneOffDesc>小行星矿机不会回收真空岩。点击开启。</AMUFA_VacstoneOffDesc>
   <AMUFA_VacstoneOnDesc>小行星矿机会回收真空岩。点击关闭。</AMUFA_VacstoneOnDesc>
-  <AMUFA_AsteroidPodStranded>矿机在当前自动矿机发射器的目标燃料量下无可到达的目标，将留在发射位等待</AMUFA_AsteroidPodStranded>
-  <AMUFA_LandOnlyMismatch>{0} 当前只启用了陆地矿机，但现在只有小行星采矿目标。</AMUFA_LandOnlyMismatch>
+  <AMUFA_AsteroidPodStranded>按自动矿机发射器实际燃料量与目标燃料量中的较高值计算，矿机仍无可达目标，将留在发射位等待。</AMUFA_AsteroidPodStranded>
   <AMUFA_DuplicateAccelerated>额外的矿机运输仓抵达了已占用目标，剩余采矿时间已减半。</AMUFA_DuplicateAccelerated>
   <AMUFA_ArrivalOnlyMessages>矿机通知：仅在抵达时显示</AMUFA_ArrivalOnlyMessages>
   <AMUFA_ArrivalOnlyMessagesDesc>开启后不显示矿机刚刚发射的通知，只在矿机抵达矿点后显示一次。燃料不足、目标无效、目标丢失和采矿完成通知不受影响。</AMUFA_ArrivalOnlyMessagesDesc>
   <AMUFA_CurrentStatus>当前状态：</AMUFA_CurrentStatus>
   <AMUFA_StatusAutomationOff>未启用自动运行</AMUFA_StatusAutomationOff>
-  <AMUFA_StatusNoReachableTarget>当前目标燃料量的发射器范围内无可达目标</AMUFA_StatusNoReachableTarget>
+  <AMUFA_StatusNoReachableTarget>按发射器实际燃料量与目标燃料量中的较高值计算，范围内无可达目标</AMUFA_StatusNoReachableTarget>
   <AMUFA_StatusPreparingLand>准备发射到陆地目标</AMUFA_StatusPreparingLand>
   <AMUFA_StatusPreparingAsteroid>准备发射到小行星</AMUFA_StatusPreparingAsteroid>
   <AMUFA_StatusFuelInsufficient>化合燃料不足，等待补充</AMUFA_StatusFuelInsufficient>

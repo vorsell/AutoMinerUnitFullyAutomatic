@@ -4,7 +4,6 @@
   <AMUFA_AutomationOn>Automation: On</AMUFA_AutomationOn>
   <AMUFA_AutomationOffDesc>Automatic construction and launching are paused. Click to enable.</AMUFA_AutomationOffDesc>
   <AMUFA_AutomationOnDesc>Automatically construct and launch configured mining pods. Click to pause.</AMUFA_AutomationOnDesc>
-  <AMUFA_AutoRebuildManaged>Automatic mode has taken control of auto rebuild.</AMUFA_AutoRebuildManaged>
   <AMUFA_LandOff>Land pods: Off</AMUFA_LandOff>
   <AMUFA_LandProto>Land pods: Prototype</AMUFA_LandProto>
   <AMUFA_LandStandard>Land pods: Standard</AMUFA_LandStandard>
@@ -25,14 +24,13 @@
   <AMUFA_VacstoneOn>Vacstone: On</AMUFA_VacstoneOn>
   <AMUFA_VacstoneOffDesc>Asteroid pods will not recover vacstone. Click to enable.</AMUFA_VacstoneOffDesc>
   <AMUFA_VacstoneOnDesc>Asteroid pods will recover vacstone. Click to disable.</AMUFA_VacstoneOnDesc>
-  <AMUFA_AsteroidPodStranded>The mining unit has no reachable target at the automatic mining unit launcher's current target fuel level and will wait at the launch position.</AMUFA_AsteroidPodStranded>
-  <AMUFA_LandOnlyMismatch>{0} is configured only for land mining pods, but currently only asteroid mining targets are available.</AMUFA_LandOnlyMismatch>
+  <AMUFA_AsteroidPodStranded>The mining unit has no reachable target within the range provided by the higher of the launcher's actual and target fuel levels, so it will wait at the launch position.</AMUFA_AsteroidPodStranded>
   <AMUFA_DuplicateAccelerated>An additional mining pod reached an occupied target. The remaining mining time has been halved.</AMUFA_DuplicateAccelerated>
   <AMUFA_ArrivalOnlyMessages>Mining unit notifications: arrival only</AMUFA_ArrivalOnlyMessages>
   <AMUFA_ArrivalOnlyMessagesDesc>Hide the notification shown immediately after launch and keep the single arrival notification. Fuel, invalid-target, target-lost, and mining-complete messages are unaffected.</AMUFA_ArrivalOnlyMessagesDesc>
   <AMUFA_CurrentStatus>Current status: </AMUFA_CurrentStatus>
   <AMUFA_StatusAutomationOff>automation is disabled</AMUFA_StatusAutomationOff>
-  <AMUFA_StatusNoReachableTarget>no reachable target is within launcher range at the current target fuel level</AMUFA_StatusNoReachableTarget>
+  <AMUFA_StatusNoReachableTarget>no reachable target is within the range provided by the higher of the launcher's actual and target fuel levels</AMUFA_StatusNoReachableTarget>
   <AMUFA_StatusPreparingLand>preparing to launch to a land target</AMUFA_StatusPreparingLand>
   <AMUFA_StatusPreparingAsteroid>preparing to launch to an asteroid</AMUFA_StatusPreparingAsteroid>
   <AMUFA_StatusFuelInsufficient>insufficient chemfuel; waiting for refueling</AMUFA_StatusFuelInsufficient>

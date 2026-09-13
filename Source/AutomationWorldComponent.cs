@@ -67,6 +67,11 @@ namespace AutoMinerUnitFullyAutomatic
 
         public void NotifyWorldObjectRemoved(WorldObject worldObject)
         {
+            if (worldObject != null)
+            {
+                firstSeenTicks.Remove(worldObject.ID);
+            }
+
             targetsDirty = true;
             reservationsDirty = true;
         }
@@ -116,22 +121,34 @@ namespace AutoMinerUnitFullyAutomatic
             targetsDirty = false;
             landTargets.Clear();
             asteroidTargets.Clear();
+            HashSet<int> currentTargetIds = new HashSet<int>();
 
             foreach (WorldObject worldObject in Find.WorldObjects.AllWorldObjects.ToList())
             {
-                if (TargetSelector.IsLandTarget(worldObject))
+                bool landTarget = TargetSelector.IsLandTarget(worldObject);
+                bool asteroidTarget = !landTarget && TargetSelector.IsAsteroidTarget(worldObject);
+                if (landTarget)
                 {
                     landTargets.Add(worldObject);
                 }
-                else if (TargetSelector.IsAsteroidTarget(worldObject))
+                else if (asteroidTarget)
                 {
                     asteroidTargets.Add(worldObject);
                 }
 
-                if (TargetSelector.IsPotentialTarget(worldObject) && !firstSeenTicks.ContainsKey(worldObject.ID))
+                if ((landTarget || asteroidTarget) && worldObject != null)
                 {
-                    firstSeenTicks[worldObject.ID] = Find.TickManager == null ? 0 : Find.TickManager.TicksGame;
+                    currentTargetIds.Add(worldObject.ID);
+                    if (!firstSeenTicks.ContainsKey(worldObject.ID))
+                    {
+                        firstSeenTicks[worldObject.ID] = Find.TickManager == null ? 0 : Find.TickManager.TicksGame;
+                    }
                 }
+            }
+
+            foreach (int staleId in firstSeenTicks.Keys.Where(id => !currentTargetIds.Contains(id)).ToList())
+            {
+                firstSeenTicks.Remove(staleId);
             }
         }
 
@@ -185,4 +202,3 @@ namespace AutoMinerUnitFullyAutomatic
         }
     }
 }
-

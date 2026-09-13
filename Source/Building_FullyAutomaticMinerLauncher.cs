@@ -14,6 +14,29 @@ namespace AutoMinerUnitFullyAutomatic
     [StaticConstructorOnStartup]
     public sealed class Building_FullyAutomaticMinerLauncher : Building_AutoMinerLauncher
     {
+        private enum AutomationDecisionStage
+        {
+            AutomationOff,
+            NoReachableTarget,
+            Roofed,
+            BuiltPodDisabled,
+            BuiltPodNoReachableTarget,
+            BuiltPodWaitingFuel,
+            BuiltPodReadyToLaunch,
+            PendingBlueprint,
+            LaunchPortOccupied,
+            PlaceBlueprint
+        }
+
+        private sealed class AutomationDecision
+        {
+            public AutomationDecisionStage Stage;
+            public CompAutoMinerLaunchable Pod;
+            public WorldObject Target;
+            public bool Asteroid;
+            public AutoRebuildMode BlueprintMode;
+        }
+
         private const string PrototypePodDefName = "ProtoAutoMiner_Pod";
         private const string StandardPodDefName = "AutoMiner_Pod";
         private const string AsteroidPodDefName = "AstAutoMiner_Pod";
@@ -58,7 +81,6 @@ namespace AutoMinerUnitFullyAutomatic
         private bool bringVacstone = true;
         private TargetSelectionMode targetSelectionMode;
         private bool asteroidStrandedMessageShown;
-        private bool landOnlyMismatchMessageShown;
         private bool reflectionFailureLogged;
         private bool podWaitDiagnosticsLogged;
         private bool roofBeforeBuildMessageShown;
@@ -101,7 +123,6 @@ namespace AutoMinerUnitFullyAutomatic
             Scribe_Values.Look(ref bringVacstone, "bringVacstone", true);
             Scribe_Values.Look(ref targetSelectionMode, "targetSelectionMode", TargetSelectionMode.FirstDiscovered);
             Scribe_Values.Look(ref asteroidStrandedMessageShown, "asteroidStrandedMessageShown", false);
-            Scribe_Values.Look(ref landOnlyMismatchMessageShown, "landOnlyMismatchMessageShown", false);
             Scribe_Values.Look(ref roofBeforeBuildMessageShown, "roofBeforeBuildMessageShown", false);
             Scribe_Values.Look(ref launchPortOccupiedMessageShown, "launchPortOccupiedMessageShown", false);
             Scribe_Values.Look(ref lastRoofedBuiltPodId, "lastRoofedBuiltPodId", -1);
@@ -137,10 +158,12 @@ namespace AutoMinerUnitFullyAutomatic
 
             if (automationEnabled)
             {
-                TryAutomate();
+                cachedAutomationStatusKey = StatusKeyForDecision(TryAutomate());
             }
-
-            RefreshAutomationStatus();
+            else
+            {
+                RefreshAutomationStatus();
+            }
         }
 
         public override string GetInspectString()
@@ -170,88 +193,177 @@ namespace AutoMinerUnitFullyAutomatic
 
         private string CalculateAutomationStatusKey()
         {
+            return StatusKeyForDecision(EvaluateAutomationDecision(false, false));
+        }
+
+        private AutomationDecision EvaluateAutomationDecision(
+            bool logBuiltPodDiagnostics,
+            bool logBlueprintDiagnostics)
+        {
             if (!automationEnabled)
             {
-                return "AMUFA_StatusAutomationOff";
+                return new AutomationDecision { Stage = AutomationDecisionStage.AutomationOff };
             }
 
             if (Map == null)
             {
-                return "AMUFA_StatusNoReachableTarget";
-            }
-
-            if (FuelingPortRoofed())
-            {
-                return "AMUFA_StatusRoofed";
+                return new AutomationDecision { Stage = AutomationDecisionStage.NoReachableTarget };
             }
 
             CompAutoMinerLaunchable builtPod = FindAdjacentPod();
-            if (builtPod != null && builtPod.parent != null && builtPod.parent.def != null)
+            if (FuelingPortRoofed())
             {
-                bool asteroidPod = builtPod.parent.def.defName == AsteroidPodDefName;
-                bool categoryEnabled = asteroidPod
-                    ? asteroidPodsEnabled && AsteroidMinerOptionAvailable()
-                    : landPodMode != LandPodMode.Off;
-                if (!categoryEnabled)
+                return new AutomationDecision
                 {
-                    return "AMUFA_StatusNoReachableTarget";
-                }
-
-                WorldObject theoreticalTarget = TargetSelector.ChooseTarget(
-                    this,
-                    builtPod.parent.def,
-                    asteroidPod,
-                    targetSelectionMode,
-                    false,
-                    false);
-                if (theoreticalTarget == null)
-                {
-                    return "AMUFA_StatusNoReachableTarget";
-                }
-
-                WorldObject fueledTarget = TargetSelector.ChooseTarget(
-                    this,
-                    builtPod.parent.def,
-                    asteroidPod,
-                    targetSelectionMode,
-                    true,
-                    false);
-                if (fueledTarget == null)
-                {
-                    return "AMUFA_StatusFuelInsufficient";
-                }
-
-                return asteroidPod ? "AMUFA_StatusPreparingAsteroid" : "AMUFA_StatusPreparingLand";
+                    Stage = AutomationDecisionStage.Roofed,
+                    Pod = builtPod
+                };
             }
 
+            if (builtPod != null)
+            {
+                return EvaluateBuiltPodDecision(builtPod, logBuiltPodDiagnostics);
+            }
+
+            return EvaluateBlueprintDecision(logBlueprintDiagnostics);
+        }
+
+        private AutomationDecision EvaluateBuiltPodDecision(
+            CompAutoMinerLaunchable pod,
+            bool logDiagnostics)
+        {
+            ThingDef podDef = pod == null || pod.parent == null ? null : pod.parent.def;
+            string podDefName = podDef == null ? null : podDef.defName;
+            bool asteroidPod = podDefName == AsteroidPodDefName;
+            bool categoryEnabled = asteroidPod
+                ? asteroidPodsEnabled && AsteroidMinerOptionAvailable()
+                : landPodMode != LandPodMode.Off &&
+                    (podDefName == PrototypePodDefName || podDefName == StandardPodDefName) &&
+                    PodOptionAvailable(podDefName);
+            if (!categoryEnabled)
+            {
+                return new AutomationDecision
+                {
+                    Stage = AutomationDecisionStage.BuiltPodDisabled,
+                    Pod = pod,
+                    Asteroid = asteroidPod
+                };
+            }
+
+            WorldObject fueledTarget = TargetSelector.ChooseTarget(
+                this, podDef, asteroidPod, targetSelectionMode, true, logDiagnostics);
+            if (fueledTarget != null)
+            {
+                return new AutomationDecision
+                {
+                    Stage = AutomationDecisionStage.BuiltPodReadyToLaunch,
+                    Pod = pod,
+                    Target = fueledTarget,
+                    Asteroid = asteroidPod
+                };
+            }
+
+            WorldObject plannedTarget = TargetSelector.ChooseTarget(
+                this, podDef, asteroidPod, targetSelectionMode, false, logDiagnostics);
+            if (plannedTarget == null)
+            {
+                return new AutomationDecision
+                {
+                    Stage = AutomationDecisionStage.BuiltPodNoReachableTarget,
+                    Pod = pod,
+                    Asteroid = asteroidPod
+                };
+            }
+
+            return new AutomationDecision
+            {
+                Stage = AutomationDecisionStage.BuiltPodWaitingFuel,
+                Pod = pod,
+                Asteroid = asteroidPod
+            };
+        }
+
+        private AutomationDecision EvaluateBlueprintDecision(bool logDiagnostics)
+        {
             ThingDef pendingPodDef = PendingPodDefAtFuelingPort();
             if (pendingPodDef != null)
             {
-                return pendingPodDef.defName == AsteroidPodDefName
-                    ? "AMUFA_StatusPreparingAsteroid"
-                    : "AMUFA_StatusPreparingLand";
+                return new AutomationDecision
+                {
+                    Stage = AutomationDecisionStage.PendingBlueprint,
+                    Asteroid = pendingPodDef.defName == AsteroidPodDefName
+                };
             }
 
             ThingDef asteroidPodDef = PodDef(AsteroidPodDefName);
-            if (AsteroidMinerOptionAvailable() && asteroidPodsEnabled &&
-                TargetSelector.ChooseTarget(
-                    this, asteroidPodDef, true, targetSelectionMode, false, false) != null)
+            if (asteroidPodsEnabled && AsteroidMinerOptionAvailable())
             {
-                return LaunchPortOccupiedByOtherConstruction()
-                    ? "AMUFA_StatusLaunchPortOccupied"
-                    : "AMUFA_StatusPreparingAsteroid";
+                WorldObject asteroidTarget = TargetSelector.ChooseTarget(
+                    this, asteroidPodDef, true, targetSelectionMode, false, logDiagnostics);
+                if (asteroidTarget != null)
+                {
+                    return new AutomationDecision
+                    {
+                        Stage = LaunchPortOccupiedByOtherConstruction()
+                            ? AutomationDecisionStage.LaunchPortOccupied
+                            : AutomationDecisionStage.PlaceBlueprint,
+                        Target = asteroidTarget,
+                        Asteroid = true,
+                        BlueprintMode = AutoRebuildMode.AsteroidMiner
+                    };
+                }
             }
 
             ThingDef landPodDef = ConfiguredLandPodDef();
-            if (landPodDef != null && TargetSelector.ChooseTarget(
-                    this, landPodDef, false, targetSelectionMode, false, false) != null)
+            if (landPodDef != null)
             {
-                return LaunchPortOccupiedByOtherConstruction()
-                    ? "AMUFA_StatusLaunchPortOccupied"
-                    : "AMUFA_StatusPreparingLand";
+                WorldObject landTarget = TargetSelector.ChooseTarget(
+                    this, landPodDef, false, targetSelectionMode, false, logDiagnostics);
+                if (landTarget != null)
+                {
+                    return new AutomationDecision
+                    {
+                        Stage = LaunchPortOccupiedByOtherConstruction()
+                            ? AutomationDecisionStage.LaunchPortOccupied
+                            : AutomationDecisionStage.PlaceBlueprint,
+                        Target = landTarget,
+                        Asteroid = false,
+                        BlueprintMode = landPodMode == LandPodMode.Prototype
+                            ? AutoRebuildMode.ProtoMiner
+                            : AutoRebuildMode.StandardMiner
+                    };
+                }
             }
 
-            return "AMUFA_StatusNoReachableTarget";
+            return new AutomationDecision { Stage = AutomationDecisionStage.NoReachableTarget };
+        }
+
+        private static string StatusKeyForDecision(AutomationDecision decision)
+        {
+            if (decision == null)
+            {
+                return "AMUFA_StatusNoReachableTarget";
+            }
+
+            switch (decision.Stage)
+            {
+                case AutomationDecisionStage.AutomationOff:
+                    return "AMUFA_StatusAutomationOff";
+                case AutomationDecisionStage.Roofed:
+                    return "AMUFA_StatusRoofed";
+                case AutomationDecisionStage.BuiltPodWaitingFuel:
+                    return "AMUFA_StatusFuelInsufficient";
+                case AutomationDecisionStage.LaunchPortOccupied:
+                    return "AMUFA_StatusLaunchPortOccupied";
+                case AutomationDecisionStage.PendingBlueprint:
+                case AutomationDecisionStage.PlaceBlueprint:
+                case AutomationDecisionStage.BuiltPodReadyToLaunch:
+                    return decision.Asteroid
+                        ? "AMUFA_StatusPreparingAsteroid"
+                        : "AMUFA_StatusPreparingLand";
+                default:
+                    return "AMUFA_StatusNoReachableTarget";
+            }
         }
         public override IEnumerable<Gizmo> GetGizmos()
         {
@@ -297,10 +409,9 @@ namespace AutoMinerUnitFullyAutomatic
                 yield break;
             }
 
-            bool advancedOptions = AdvancedMinerOptionsAvailable();
             bool asteroidOption = AsteroidMinerOptionAvailable();
             yield return TargetSelectionCommand();
-            yield return LandPodCommand(advancedOptions);
+            yield return LandPodCommand();
             if (asteroidOption)
             {
                 yield return AsteroidPodCommand();
@@ -311,146 +422,92 @@ namespace AutoMinerUnitFullyAutomatic
             }
         }
 
-        private void TryAutomate()
+        private AutomationDecision TryAutomate()
         {
             ForceBaseAutoRebuildOff();
-            CompAutoMinerLaunchable adjacentPod = FindAdjacentPod();
-            if (adjacentPod != null)
+            AutomationDecision decision = EvaluateAutomationDecision(
+                !podWaitDiagnosticsLogged,
+                false);
+            ExecuteAutomationDecision(decision);
+            if (!automationEnabled || decision.Stage == AutomationDecisionStage.BuiltPodReadyToLaunch)
             {
-                HandleBuiltPod(adjacentPod);
-                return;
+                return EvaluateAutomationDecision(false, false);
             }
 
-            podWaitDiagnosticsLogged = false;
-            if (FuelingPortRoofed())
-            {
-                NotifyRoofBlockedBeforeBuild();
-                return;
-            }
-
-            roofBeforeBuildMessageShown = false;
-            bool launchPortOccupied = LaunchPortOccupiedByOtherConstruction();
-            ThingDef asteroidPodDef = PodDef(AsteroidPodDefName);
-            if (asteroidPodsEnabled && AsteroidMinerOptionAvailable())
-            {
-                WorldObject asteroidTarget = TargetSelector.ChooseTarget(
-                    this, asteroidPodDef, true, targetSelectionMode, false, false);
-                if (asteroidTarget != null)
-                {
-                    asteroidStrandedMessageShown = false;
-                    landOnlyMismatchMessageShown = false;
-                    if (launchPortOccupied)
-                    {
-                        NotifyLaunchPortOccupied();
-                        return;
-                    }
-
-                    TryPlaceConfiguredBlueprint(AutoRebuildMode.AsteroidMiner);
-                    return;
-                }
-            }
-
-            ThingDef landPodDef = ConfiguredLandPodDef();
-            if (landPodDef != null)
-            {
-                WorldObject landTarget = TargetSelector.ChooseTarget(
-                    this, landPodDef, false, targetSelectionMode, false, false);
-                if (landTarget != null)
-                {
-                    landOnlyMismatchMessageShown = false;
-                    if (launchPortOccupied)
-                    {
-                        NotifyLaunchPortOccupied();
-                        return;
-                    }
-
-                    TryPlaceConfiguredBlueprint(
-                        landPodMode == LandPodMode.Prototype
-                            ? AutoRebuildMode.ProtoMiner
-                            : AutoRebuildMode.StandardMiner);
-                    return;
-                }
-            }
-
-            NotifyLandOnlyMismatchIfNeeded();
+            return decision;
         }
 
-        private void HandleBuiltPod(CompAutoMinerLaunchable pod)
+        private void ExecuteAutomationDecision(AutomationDecision decision)
         {
-            if (FuelingPortRoofed())
+            if (decision == null)
             {
-                NotifyRoofBlockedForBuiltPod(pod);
                 return;
             }
 
-            string podDefName = pod.parent == null || pod.parent.def == null ? null : pod.parent.def.defName;
-            bool asteroidPod = podDefName == AsteroidPodDefName;
-            if (asteroidPod)
+            if (decision.Pod == null)
             {
-                if (!asteroidPodsEnabled || !AsteroidMinerOptionAvailable())
-                {
+                podWaitDiagnosticsLogged = false;
+            }
+
+            if (decision.Stage != AutomationDecisionStage.Roofed && decision.Pod == null)
+            {
+                roofBeforeBuildMessageShown = false;
+            }
+
+            switch (decision.Stage)
+            {
+                case AutomationDecisionStage.Roofed:
+                    if (decision.Pod == null)
+                    {
+                        NotifyRoofBlockedBeforeBuild();
+                    }
+                    else
+                    {
+                        NotifyRoofBlockedForBuiltPod(decision.Pod);
+                    }
+                    break;
+                case AutomationDecisionStage.BuiltPodDisabled:
                     ClearStrandedMessageState();
-                    return;
-                }
-
-                WorldObject theoreticalTarget = TargetSelector.ChooseTarget(
-                    this, pod.parent.def, true, targetSelectionMode, false, !podWaitDiagnosticsLogged);
-                if (theoreticalTarget == null)
-                {
+                    break;
+                case AutomationDecisionStage.BuiltPodNoReachableTarget:
                     podWaitDiagnosticsLogged = true;
-                    NotifyNoReachableTargetForBuiltPod(pod);
-                    return;
-                }
-
-                ClearStrandedMessageState();
-                WorldObject target = TargetSelector.ChooseTarget(
-                    this, pod.parent.def, true, targetSelectionMode, true, !podWaitDiagnosticsLogged);
-                if (target == null)
-                {
+                    NotifyNoReachableTargetForBuiltPod(decision.Pod);
+                    break;
+                case AutomationDecisionStage.BuiltPodWaitingFuel:
+                    ClearStrandedMessageState();
                     podWaitDiagnosticsLogged = true;
-                    return;
-                }
+                    break;
+                case AutomationDecisionStage.BuiltPodReadyToLaunch:
+                    ClearStrandedMessageState();
+                    podWaitDiagnosticsLogged = false;
+                    if (decision.Asteroid && BringVacstoneField != null)
+                    {
+                        BringVacstoneField.SetValue(decision.Pod, bringVacstone);
+                    }
 
-                podWaitDiagnosticsLogged = false;
-                if (BringVacstoneField != null)
-                {
-                    BringVacstoneField.SetValue(pod, bringVacstone);
-                }
+                    Launch(decision.Pod, decision.Target);
+                    break;
+                case AutomationDecisionStage.LaunchPortOccupied:
+                case AutomationDecisionStage.PlaceBlueprint:
+                    ExecuteBlueprintDecision(decision, false);
+                    break;
+            }
+        }
 
-                Launch(pod, target);
+        private void ExecuteBlueprintDecision(AutomationDecision decision, bool logPlacement)
+        {
+            if (decision.Asteroid)
+            {
+                asteroidStrandedMessageShown = false;
+            }
+
+            if (decision.Stage == AutomationDecisionStage.LaunchPortOccupied)
+            {
+                NotifyLaunchPortOccupied();
                 return;
             }
 
-            bool allowedLandPod = landPodMode != LandPodMode.Off &&
-                (podDefName == PrototypePodDefName ||
-                    (podDefName == StandardPodDefName && AdvancedMinerOptionsAvailable()));
-            if (!allowedLandPod)
-            {
-                ClearStrandedMessageState();
-                return;
-            }
-
-            WorldObject theoreticalLandTarget = TargetSelector.ChooseTarget(
-                this, pod.parent.def, false, targetSelectionMode, false, !podWaitDiagnosticsLogged);
-            if (theoreticalLandTarget == null)
-            {
-                podWaitDiagnosticsLogged = true;
-                NotifyNoReachableTargetForBuiltPod(pod);
-                return;
-            }
-
-            ClearStrandedMessageState();
-            WorldObject landTarget = TargetSelector.ChooseTarget(
-                this, pod.parent.def, false, targetSelectionMode, true, !podWaitDiagnosticsLogged);
-            if (landTarget != null)
-            {
-                podWaitDiagnosticsLogged = false;
-                Launch(pod, landTarget);
-            }
-            else
-            {
-                podWaitDiagnosticsLogged = true;
-            }
+            TryPlaceConfiguredBlueprint(decision.BlueprintMode, logPlacement);
         }
 
         private void Launch(CompAutoMinerLaunchable pod, WorldObject target)
@@ -758,11 +815,6 @@ namespace AutoMinerUnitFullyAutomatic
             lastStrandedPodId = -1;
         }
 
-        private void NotifyLandOnlyMismatchIfNeeded()
-        {
-            landOnlyMismatchMessageShown = false;
-        }
-
         private void SuspendBaseAutoRebuild()
         {
             if (BaseAutoRebuildModeField == null)
@@ -879,15 +931,15 @@ namespace AutoMinerUnitFullyAutomatic
             }
         }
 
-        private static bool AdvancedMinerOptionsAvailable()
+        private static bool PodOptionAvailable(string podDefName)
         {
             if (DebugSettings.godMode)
             {
                 return true;
             }
 
-            ResearchProjectDef fabrication = DefDatabase<ResearchProjectDef>.GetNamedSilentFail("Fabrication");
-            return fabrication != null && fabrication.IsFinished;
+            ThingDef podDef = PodDef(podDefName);
+            return podDef != null && podDef.IsResearchFinished;
         }
 
         private static bool AsteroidMinerOptionAvailable()
@@ -897,8 +949,7 @@ namespace AutoMinerUnitFullyAutomatic
                 return true;
             }
 
-            ThingDef asteroidPod = PodDef(AsteroidPodDefName);
-            return asteroidPod != null && asteroidPod.IsResearchFinished;
+            return PodOptionAvailable(AsteroidPodDefName);
         }
 
         internal float AutomationFuelLimit
@@ -934,9 +985,9 @@ namespace AutoMinerUnitFullyAutomatic
             switch (landPodMode)
             {
                 case LandPodMode.Prototype:
-                    return PodDef(PrototypePodDefName);
+                    return PodOptionAvailable(PrototypePodDefName) ? PodDef(PrototypePodDefName) : null;
                 case LandPodMode.Standard:
-                    return AdvancedMinerOptionsAvailable() ? PodDef(StandardPodDefName) : null;
+                    return PodOptionAvailable(StandardPodDefName) ? PodDef(StandardPodDefName) : null;
                 default:
                     return null;
             }
@@ -972,28 +1023,34 @@ namespace AutoMinerUnitFullyAutomatic
                 {
                     if (automationEnabled)
                     {
+                        AutoRebuildMode restoredMode = hasSuspendedAutoRebuildMode
+                            ? suspendedAutoRebuildMode
+                            : AutoRebuildMode.Off;
                         automationEnabled = false;
+                        CancelAllMinerBlueprints();
                         RestoreBaseAutoRebuild();
+                        InvalidateAutomationStatus();
+                        if (restoredMode != AutoRebuildMode.Off)
+                        {
+                            TryPlaceConfiguredBlueprint(restoredMode, true);
+                        }
                     }
                     else
                     {
                         SuspendBaseAutoRebuild();
                         automationEnabled = true;
+                        ReconcileConfiguredBlueprint();
                     }
-
-                    ReconcileConfiguredBlueprint();
                 }
             };
         }
 
-        private Command_Action LandPodCommand(bool advancedOptions)
+        private Command_Action LandPodCommand()
         {
             string labelKey;
             string descKey;
             string iconDefName;
-            LandPodMode displayedMode = advancedOptions
-                ? landPodMode
-                : (landPodMode == LandPodMode.Prototype ? LandPodMode.Prototype : LandPodMode.Off);
+            LandPodMode displayedMode = AvailableLandPodMode(landPodMode);
             switch (displayedMode)
             {
                 case LandPodMode.Prototype:
@@ -1020,12 +1077,37 @@ namespace AutoMinerUnitFullyAutomatic
                 icon = displayedMode == LandPodMode.Off ? DisabledIcon() : CommandIcon(iconDefName),
                 action = delegate
                 {
-                    landPodMode = advancedOptions
-                        ? (LandPodMode)(((int)landPodMode + 1) % 3)
-                        : (displayedMode == LandPodMode.Prototype ? LandPodMode.Off : LandPodMode.Prototype);
+                    landPodMode = NextAvailableLandPodMode(displayedMode);
                     ReconcileConfiguredBlueprint();
                 }
             };
+        }
+
+        private static LandPodMode AvailableLandPodMode(LandPodMode mode)
+        {
+            switch (mode)
+            {
+                case LandPodMode.Prototype:
+                    return PodOptionAvailable(PrototypePodDefName) ? mode : LandPodMode.Off;
+                case LandPodMode.Standard:
+                    return PodOptionAvailable(StandardPodDefName) ? mode : LandPodMode.Off;
+                default:
+                    return LandPodMode.Off;
+            }
+        }
+
+        private static LandPodMode NextAvailableLandPodMode(LandPodMode mode)
+        {
+            for (int offset = 1; offset <= 3; offset++)
+            {
+                LandPodMode candidate = (LandPodMode)(((int)mode + offset) % 3);
+                if (candidate == LandPodMode.Off || AvailableLandPodMode(candidate) == candidate)
+                {
+                    return candidate;
+                }
+            }
+
+            return LandPodMode.Off;
         }
 
         private Command_Action AsteroidPodCommand()
@@ -1095,64 +1177,30 @@ namespace AutoMinerUnitFullyAutomatic
         {
             InvalidateAutomationStatus();
             CancelAllMinerBlueprints();
-            if (!automationEnabled)
+            AutomationDecision decision = EvaluateAutomationDecision(false, true);
+            if (decision.Stage == AutomationDecisionStage.AutomationOff)
             {
                 return;
             }
 
-            CompAutoMinerLaunchable builtPod = FindAdjacentPod();
-            if (builtPod != null)
+            if (decision.Pod == null && decision.Stage != AutomationDecisionStage.Roofed)
             {
-                if (FuelingPortRoofed())
+                roofBeforeBuildMessageShown = false;
+                if (decision.Stage == AutomationDecisionStage.PlaceBlueprint ||
+                    !LaunchPortOccupiedByOtherConstruction())
                 {
-                    NotifyRoofBlockedForBuiltPod(builtPod);
+                    launchPortOccupiedMessageShown = false;
                 }
-
-                return;
             }
 
-            if (FuelingPortRoofed())
+            if (decision.Stage == AutomationDecisionStage.Roofed)
             {
-                NotifyRoofBlockedBeforeBuild();
-                return;
+                ExecuteAutomationDecision(decision);
             }
-
-            roofBeforeBuildMessageShown = false;
-            bool launchPortOccupied = LaunchPortOccupiedByOtherConstruction();
-            if (!launchPortOccupied)
+            else if (decision.Stage == AutomationDecisionStage.LaunchPortOccupied ||
+                decision.Stage == AutomationDecisionStage.PlaceBlueprint)
             {
-                launchPortOccupiedMessageShown = false;
-            }
-
-            ThingDef asteroidPodDef = PodDef(AsteroidPodDefName);
-            if (AsteroidMinerOptionAvailable() && asteroidPodsEnabled && TargetSelector.ChooseTarget(
-                    this, asteroidPodDef, true, targetSelectionMode, false, true) != null)
-            {
-                if (launchPortOccupied)
-                {
-                    NotifyLaunchPortOccupied();
-                    return;
-                }
-
-                TryPlaceConfiguredBlueprint(AutoRebuildMode.AsteroidMiner, true);
-                return;
-            }
-
-            ThingDef landPodDef = ConfiguredLandPodDef();
-            if (landPodDef != null && TargetSelector.ChooseTarget(
-                    this, landPodDef, false, targetSelectionMode, false, true) != null)
-            {
-                if (launchPortOccupied)
-                {
-                    NotifyLaunchPortOccupied();
-                    return;
-                }
-
-                TryPlaceConfiguredBlueprint(
-                    landPodMode == LandPodMode.Prototype
-                        ? AutoRebuildMode.ProtoMiner
-                        : AutoRebuildMode.StandardMiner,
-                    true);
+                ExecuteBlueprintDecision(decision, true);
             }
         }
 

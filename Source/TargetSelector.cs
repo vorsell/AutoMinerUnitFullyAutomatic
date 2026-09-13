@@ -84,10 +84,11 @@ namespace AutoMinerUnitFullyAutomatic
             int unreachable = 0;
             int outsideRange = 0;
             int insufficientFuel = 0;
-            float fuelLimit = launcher.AutomationFuelLimit;
+            float targetFuelLevel = launcher.AutomationFuelLimit;
+            float currentFuel = fuel.Fuel;
             float availableFuel = requireCurrentFuel
-                ? Mathf.Min(fuel.Fuel, fuelLimit)
-                : fuelLimit;
+                ? currentFuel
+                : Mathf.Max(currentFuel, targetFuelLevel);
             TargetCandidate chosen = null;
 
             foreach (WorldObject target in component.Targets(asteroid))
@@ -155,7 +156,8 @@ namespace AutoMinerUnitFullyAutomatic
                     ", unreachable=" + unreachable +
                     ", outsideRange=" + outsideRange +
                     ", insufficientFuel=" + insufficientFuel +
-                    ", fuelLimit=" + fuelLimit.ToString("0.##") +
+                    ", targetFuelLevel=" + targetFuelLevel.ToString("0.##") +
+                    ", currentFuel=" + currentFuel.ToString("0.##") +
                     ", availableFuel=" + availableFuel.ToString("0.##");
                 if (chosen == null)
                 {
@@ -222,4 +224,3 @@ namespace AutoMinerUnitFullyAutomatic
         }
     }
 }
-

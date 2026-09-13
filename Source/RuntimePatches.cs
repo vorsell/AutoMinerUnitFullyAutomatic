@@ -19,7 +19,7 @@ namespace AutoMinerUnitFullyAutomatic
 
         static RuntimePatches()
         {
-            Log.Message("[AMUFA] Loaded Auto Miner Unit - Fully Automatic diagnostic build 2026-08-26.5.");
+            Log.Message("[AMUFA] Loaded Auto Miner Unit - Fully Automatic.");
             Harmony harmony = new Harmony(HarmonyOwner);
             TryPatch(
                 harmony,
@@ -191,5 +191,4 @@ namespace AutoMinerUnitFullyAutomatic
         }
     }
 }
-
 
